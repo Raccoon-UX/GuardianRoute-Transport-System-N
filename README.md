@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+# GuardianRoute-Transport-System
+Real-time school bus tracking system built with Node.js, Socket.io, and Leaflet Maps. Features live geolocation, geofencing, driver SOS alerts, and fleet management analytics.
+=======
+>>>>>>> cd72c95 (Updated README.md)
 
 # 🚍 GuardianRoute
 
@@ -17,7 +24,12 @@ GuardianRoute is an AI-powered school bus tracking solution designed to ensure s
 
 - **Frontend:** HTML5, CSS3 (Custom Responsive), JavaScript (Vanilla)
 - **Maps & Visualization:** Leaflet.js, OpenStreetMap, Chart.js
+<<<<<<< HEAD
 - **Backend:** Node.js, Express.js
+=======
+- **Backend:** Node.js, Express.jsgit push -u origin main --force
+
+>>>>>>> cd72c95 (Updated README.md)
 - **Real-time Communication:** Socket.io
 
 ## 📂 Project Structure
@@ -104,4 +116,8 @@ Contributions are welcome! Please fork the repository and create a pull request 
 
 ---
 
+<<<<<<< HEAD
 **Built with ❤️ for WebSprint Hackathon 2026**
+=======
+**Built with ❤️ for WebSprint Hackathon 2026**
+>>>>>>> cd72c95 (Updated README.md)
