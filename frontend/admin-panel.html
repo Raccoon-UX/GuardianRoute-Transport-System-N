@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuardianRoute-Admin</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --dark: #1e293b;
+            --sidebar-bg: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.6);
+        }
+
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            /* ✨ MODERN GRADIENT BACKGROUND ✨ */
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f0fdfa 100%);
+            color: var(--dark);
+            overflow: hidden;
+        }
+        
+        /* --- SIDEBAR (Modern Dark) --- */
+        .sidebar { 
+            width: 260px; 
+            background: var(--sidebar-bg); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 10px 0 30px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        .sidebar-header { 
+            padding: 30px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            font-size: 1.3rem; 
+            font-weight: 700; 
+            color: #fff;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .brand-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 35px; height: 35px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+
+        .menu { padding: 20px 10px; flex: 1; }
+        .menu a { 
+            display: flex; 
+            align-items: center; 
+            padding: 12px 20px; 
+            margin-bottom: 5px;
+            color: #94a3b8; 
+            text-decoration: none; 
+            transition: all 0.3s ease; 
+            font-weight: 500;
+            border-radius: 10px;
+        }
+        .menu a:hover, .menu a.active { 
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.15), transparent); 
+            color: #fff; 
+            transform: translateX(5px);
+        }
+        .menu i { margin-right: 15px; width: 20px; text-align: center; }
+
+        /* --- MAIN CONTENT --- */
+        .content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: linear-gradient(to right, #1e293b, #475569);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section { display: none; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- GLASS CARDS (The Magic) --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+            padding: 25px;
+        }
+
+        /* Stats Grid */
+        .card-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+            gap: 25px; 
+            margin-bottom: 30px; 
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 25px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); background: white; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.1); }
+
+        .stat-info h3 { margin: 0; font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-info .value { font-size: 2.2rem; font-weight: 700; color: #1e293b; margin-top: 5px; }
+        
+        .icon-circle {
+            width: 55px; height: 55px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            color: #64748b;
+        }
+        /* Custom Colors */
+        .stat-card.primary .icon-circle { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: var(--primary); }
+        .stat-card.success .icon-circle { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #10b981; }
+        .stat-card.warning .icon-circle { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #f97316; }
+
+        /* Charts */
+        .charts-row { display: flex; gap: 25px; flex-wrap: wrap; margin-bottom: 30px; }
+        .chart-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 600; color: #334155; }
+
+        /* Alerts */
+        .alert-item {
+            display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .alert-item:last-child { border-bottom: none; }
+        .alert-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+
+        /* Table */
+        .table-container { overflow: hidden; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: rgba(248, 250, 252, 0.8); padding: 16px; text-align: left; font-weight: 600; color: #475569; }
+        td { padding: 16px; border-bottom: 1px solid rgba(0,0,0,0.03); color: #334155; }
+        tr:last-child td { border-bottom: none; }
+        
+        .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .status-pill.present { background: #dcfce7; color: #166534; }
+        .status-pill.absent { background: #fee2e2; color: #991b1b; }
+        .status-pill.maintenance { background: #fef3c7; color: #d97706; }
+        .status-pill.idle { background: #f1f5f9; color: #64748b; }
+
+        /* Forms & Buttons */
+        .form-row { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 8px; color: #475569; font-weight: 500; }
+        input { 
+            width: 100%; padding: 12px 15px; 
+            border: 1px solid #e2e8f0; border-radius: 10px; 
+            background: rgba(255,255,255,0.9);
+            transition: 0.2s; box-sizing: border-box; font-family: inherit;
+        }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        
+        .btn { 
+            padding: 12px 24px; 
+            background: linear-gradient(135deg, var(--primary), #4f46e5); 
+            color: white; border: none; border-radius: 10px; 
+            font-weight: 600; cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4); }
+
+        #map { height: 550px; width: 100%; border-radius: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <!-- <div class="sidebar-header">
+            <div class="brand-icon"><i class="fas fa-bolt"></i></div>
+            <span>GuardianRoute</span>
+        </div> -->
+        <div class="logo">
+            <img src="imglogoNoText.png" alt="GuardianRoute Logo" style="height: 40px; margin-right: 10px; margin-top: 10px;"> 
+            GuardianRoute
+        </div>
+        <div class="menu">
+            <a href="#" class="active" onclick="showSection('dashboard')"><i class="fas fa-grid-2"></i> Dashboard</a>
+            <a href="#" onclick="showSection('live-map')"><i class="fas fa-map-location-dot"></i> Live Tracking</a>
+            <a href="#" onclick="showSection('students')"><i class="fas fa-users-viewfinder"></i> Students</a>
+            <a href="#" onclick="showSection('buses')"><i class="fas fa-bus-simple"></i> Fleet Manager</a>
+            <a href="index.html" style="margin-top: auto; color: #f43f5e;"><i class="fas fa-power-off"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="content">
+        
+        <div id="dashboard" class="section active">
+            <h1 class="header-title">Dashboard Overview</h1>
+            
+            <div class="card-grid">
+                <div class="stat-card primary">
+                    <div class="stat-info">
+                        <h3>Active Buses</h3>
+                        <div class="value">1</div>
+                    </div>
+                    <div class="icon-circle"><i class="fas fa-bus"></i></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Total Students</h3>
+                        <div class="value" id="totalStudents">0</div>
+                    </div>
+                    <div class="icon-circle"><i class="fas fa-user-graduate"></i></div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-info">
+                        <h3>Avg. Delay</h3>
+                        <div class="value">2m</div>
+                    </div>
+                    <div class="icon-circle"><i class="fas fa-stopwatch"></i></div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-info">
+                        <h3>Fuel Efficiency</h3>
+                        <div class="value">+12%</div>
+                    </div>
+                    <div class="icon-circle"><i class="fas fa-leaf"></i></div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="glass-panel" style="flex: 2; min-width: 350px;">
+                    <div class="chart-header">
+                        <span>Attendance Trends</span>
+                        <i class="fas fa-ellipsis-v" style="color:#ccc;"></i>
+                    </div>
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+                <div class="glass-panel" style="flex: 1; min-width: 300px;">
+                    <div class="chart-header">
+                        <span>Fuel Consumption</span>
+                        <i class="fas fa-gas-pump" style="color:#ccc;"></i>
+                    </div>
+                    <div style="height: 200px; display: flex; justify-content: center;">
+                        <canvas id="fuelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <div class="chart-header"><span>Recent Alerts</span></div>
+                <div class="alert-item">
+                    <div class="alert-dot" style="background: #f59e0b;"></div>
+                    <div style="flex:1;">
+                        <strong>Bus MH-04 Delayed</strong> - Heavy traffic at Mira Road Junction.
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top:2px;">2 mins ago</div>
+                    </div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-dot" style="background: #10b981;"></div>
+                    <div style="flex:1;">
+                        <strong>Student Boarded</strong> - Rahul Verma scanned ID card.
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top:2px;">15 mins ago</div>
+                    </div>
+                </div>
+                <div class="alert-item">
+                    <div class="alert-dot" style="background: #3b82f6;"></div>
+                    <div style="flex:1;">
+                        <strong>Route Optimized</strong> - Stop #3 skipped due to absence.
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top:2px;">1 hour ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="live-map" class="section">
+            <h1 class="header-title">Live Fleet Tracking</h1>
+            <div class="glass-panel" style="padding: 10px;">
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <div id="students" class="section">
+            <h1 class="header-title">Student Management</h1>
+            
+            <div class="glass-panel" style="margin-bottom: 30px;">
+                <div class="chart-header"><span>Register New Student</span></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="sName" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Roll No</label>
+                        <input type="text" id="sRoll" placeholder="101">
+                    </div>
+                    <div class="form-group">
+                        <label>Bus Route ID</label>
+                        <input type="text" id="sBus" placeholder="BUS_001">
+                    </div>
+                    <button class="btn" onclick="addStudent()">Add Student</button>
+                </div>
+            </div>
+
+            <div class="glass-panel table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Roll No</th>
+                            <th>Bus ID</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="buses" class="section">
+            <h1 class="header-title">Fleet Management</h1>
+
+            <div class="card-grid">
+                <div class="stat-card primary">
+                    <div class="stat-info"><h3>Total Fleet</h3><div class="value" id="totalFleet">0</div></div>
+                    <div class="icon-circle"><i class="fas fa-layer-group"></i></div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-info"><h3>On Route</h3><div class="value" id="activeFleet">0</div></div>
+                    <div class="icon-circle"><i class="fas fa-route"></i></div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-info"><h3>In Maintenance</h3><div class="value" id="maintenanceFleet">0</div></div>
+                    <div class="icon-circle"><i class="fas fa-tools"></i></div>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="margin-bottom: 30px;">
+                <div class="chart-header"><span>Register New Vehicle</span></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Bus Number</label><input type="text" id="bNumber" placeholder="MH-04-AB-1234"></div>
+                    <div class="form-group"><label>Driver Name</label><input type="text" id="bDriver" placeholder="Ramesh Kumar"></div>
+                    <div class="form-group"><label>Capacity</label><input type="number" id="bCapacity" placeholder="40"></div>
+                    <button class="btn" onclick="addBus()">Register Bus</button>
+                </div>
+            </div>
+
+            <div class="glass-panel table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bus Number</th>
+                            <th>Driver</th>
+                            <th>Status</th>
+                            <th>Fuel Rating</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="busTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. NAVIGATION ---
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.menu a').forEach(link => link.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(id === 'live-map') setTimeout(() => map.invalidateSize(), 100);
+        }
+
+        // --- 2. MAP LOGIC ---
+        const map = L.map('map').setView([19.0760, 72.8777], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap & Carto',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+        
+        const busIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
+            iconSize: [48, 48], iconAnchor: [24, 24]
+        });
+
+        const socket = io();
+        const markers = {};
+        let routePolyline = null;
+
+        socket.on('updateMap', (data) => {
+            const { busId, location } = data;
+            if (markers[busId]) {
+                markers[busId].setLatLng([location.lat, location.lng]);
+            } else {
+                markers[busId] = L.marker([location.lat, location.lng], { icon: busIcon }).addTo(map).bindPopup(busId);
+            }
+        });
+
+        function updateRouteOnMap(busId) {
+            fetch(`/api/route/${busId}`)
+                .then(res => res.json())
+                .then(routePoints => {
+                    if (routePolyline) map.removeLayer(routePolyline);
+                    const latLngs = routePoints.map(p => [p.lat, p.lng]);
+                    if (latLngs.length > 0) {
+                        routePolyline = L.polyline(latLngs, { color: '#10b981', weight: 6, opacity: 0.8 }).addTo(map);
+                        routePoints.forEach(p => {
+                            L.circleMarker([p.lat, p.lng], { radius: 6, color: '#6366f1', fillOpacity: 1 }).addTo(map).bindPopup(p.name);
+                        });
+                        map.fitBounds(routePolyline.getBounds());
+                    }
+                });
+        }
+
+        // --- 3. STUDENT DATA LOGIC ---
+        function loadStudents() {
+            fetch('/api/students').then(res => res.json()).then(data => {
+                document.getElementById('totalStudents').innerText = data.length;
+                const tbody = document.getElementById('studentTableBody');
+                tbody.innerHTML = '';
+                data.forEach(student => {
+                    const statusClass = student.isPresent ? 'present' : 'absent';
+                    const statusText = student.isPresent ? 'Present' : 'Absent';
+                    const btnText = student.isPresent ? 'Mark Absent' : 'Mark Present';
+                    const btnStyle = student.isPresent ? 'background:#fee2e2; color:#ef4444;' : 'background:#dcfce7; color:#166534;';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight:600;">${student.name}</td>
+                            <td>${student.rollNo}</td>
+                            <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:5px; font-size:0.9rem;">${student.busId}</span></td>
+                            <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <button onclick="toggleAttendance('${student._id}', ${!student.isPresent})" 
+                                    style="border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; ${btnStyle}">
+                                    ${btnText}
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                updateRouteOnMap('BUS_001');
+            });
+        }
+        loadStudents();
+
+        function toggleAttendance(id, newStatus) {
+            fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId: id, status: newStatus })
+            }).then(() => loadStudents());
+        }
+
+        function addStudent() {
+            const name = document.getElementById('sName').value;
+            const rollNo = document.getElementById('sRoll').value;
+            const busId = document.getElementById('sBus').value;
+            const baseLat = 19.0760;
+            const baseLng = 72.8777;
+            const randomLat = baseLat + (Math.random() * 0.04) - 0.02;
+            const randomLng = baseLng + (Math.random() * 0.04) - 0.02;
+
+            fetch('/api/students', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, rollNo, busId, pickupLocation: { lat: randomLat, lng: randomLng } })
+            }).then(() => { loadStudents(); alert('Student Added!'); });
+        }
+
+        // --- 4. FLEET MANAGER LOGIC (Updated) ---
+        function loadBuses() {
+            fetch('/api/buses')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalFleet').innerText = data.length;
+                    document.getElementById('activeFleet').innerText = data.filter(b => b.status === 'active').length;
+                    document.getElementById('maintenanceFleet').innerText = data.filter(b => b.status === 'maintenance').length;
+
+                    const tbody = document.getElementById('busTableBody');
+                    tbody.innerHTML = '';
+
+                    data.forEach(bus => {
+                        let statusBadge = '';
+                        if(bus.status === 'active') statusBadge = '<span class="status-pill present">On Route</span>';
+                        else if(bus.status === 'maintenance') statusBadge = '<span class="status-pill maintenance">Maintenance</span>';
+                        else statusBadge = '<span class="status-pill idle">Idle</span>';
+
+                        const nextStatus = bus.status === 'maintenance' ? 'idle' : 'maintenance';
+                        const btnText = bus.status === 'maintenance' ? 'Finish Repair' : 'Send to Repair';
+                        const btnColor = bus.status === 'maintenance' ? '#10b981' : '#f59e0b';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td style="font-weight:600;">${bus.busId}</td>
+                                <td>${bus.driverName || 'Unassigned'}</td>
+                                <td>${statusBadge}</td>
+                                <td><i class="fas fa-star" style="color:#f59e0b;"></i> (4.5)</td>
+                                <td>
+                                    <button onclick="updateBusStatus('${bus.busId}', '${nextStatus}')" 
+                                        style="border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; background:${btnColor}; color:white;">
+                                        <i class="fas fa-wrench"></i> ${btnText}
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+        
+        function addBus() {
+            const busId = document.getElementById('bNumber').value;
+            const driverName = document.getElementById('bDriver').value;
+            if(!busId) return alert("Bus Number is required!");
+
+            fetch('/api/buses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ busId, driverName, status: 'idle', location: { lat: 19.0760, lng: 72.8777 } })
+            }).then(() => { alert('Bus Registered!'); loadBuses(); });
+        }
+
+        function updateBusStatus(busId, status) {
+            fetch('/api/buses/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ busId, status })
+            }).then(() => loadBuses());
+        }
+
+        // Initialize Fleet Manager
+        loadBuses();
+
+        // --- 5. CHARTS ---
+        const ctx1 = document.getElementById('attendanceChart').getContext('2d');
+        const gradient = ctx1.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                datasets: [{
+                    label: 'Attendance',
+                    data: [45, 48, 40, 49, 42, 30],
+                    borderColor: '#6366f1',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const ctx2 = document.getElementById('fuelChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Used', 'Saved'],
+                datasets: [{
+                    data: [75, 25],
+                    backgroundColor: ['#f43f5e', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '70%' }
+        });
+    </script>
+</body>
+</html>

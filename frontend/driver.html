@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Panel</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f8fafc;
+            padding-top: 40px;
+            color: #333;
+        }
+        h1 { margin-bottom: 20px; color: #1e293b; }
+        
+        .dashboard-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .status-badge {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .info-grid {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 12px;
+        }
+        .info-item h4 { margin: 0; font-size: 0.9rem; color: #64748b; }
+        .info-item p { margin: 5px 0 0; font-size: 1.1rem; font-weight: bold; color: #334155; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 15px;
+        }
+        .btn-green { background-color: #10b981; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .btn-red { background-color: #ef4444; color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+        .btn-sos { 
+            background-color: #fee2e2; 
+            color: #ef4444; 
+            border: 2px solid #ef4444;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-sos:hover { background-color: #ef4444; color: white; }
+
+        .coords { font-size: 0.85rem; color: #94a3b8; margin-top: 10px; font-family: monospace; }
+        .back-link { margin-top: 20px; color: #64748b; text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; color: #4f46e5; }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <h1>🚍 Driver Dashboard</h1>
+    
+    <div class="dashboard-card">
+        <div class="status-badge">
+            Status: <span id="statusText" style="color: #ef4444;">Inactive 🔴</span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <h4>Students</h4>
+                <p>12 / 40</p>
+            </div>
+            <div class="info-item">
+                <h4>Next Stop</h4>
+                <p>Mira Road</p>
+            </div>
+        </div>
+        
+        <button id="toggleBtn" class="btn btn-green" onclick="toggleTracking()">
+            Start Trip 🚀
+        </button>
+
+        <button class="btn btn-sos" onclick="triggerSOS()">
+            <i class="fas fa-bell"></i> EMERGENCY SOS
+        </button>
+
+        <p class="coords" id="coords">Waiting for GPS...</p>
+    </div>
+
+    <a href="index.html" class="back-link">&larr; Back to Home</a>
+
+    <script>
+        const socket = io();
+        let watchId = null;
+        let isTracking = false;
+
+        function toggleTracking() {
+            const btn = document.getElementById('toggleBtn');
+            const statusText = document.getElementById('statusText');
+
+            if (!isTracking) {
+                if (navigator.geolocation) {
+                    watchId = navigator.geolocation.watchPosition(sendPosition, showError, { enableHighAccuracy: true });
+                    isTracking = true;
+                    btn.innerText = "Stop Trip 🛑";
+                    btn.className = "btn btn-red";
+                    statusText.innerText = "Active 🟢";
+                    statusText.style.color = "#10b981";
+                } else {
+                    alert("Geolocation not supported.");
+                }
+            } else {
+                navigator.geolocation.clearWatch(watchId);
+                isTracking = false;
+                btn.innerText = "Start Trip 🚀";
+                btn.className = "btn btn-green";
+                statusText.innerText = "Inactive 🔴";
+                statusText.style.color = "#ef4444";
+                document.getElementById('coords').innerText = "Tracking Stopped";
+            }
+        }
+
+        function sendPosition(position) {
+            const { latitude, longitude } = position.coords;
+            document.getElementById('coords').innerText = `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            socket.emit('driverLocation', { busId: 'BUS_001', location: { lat: latitude, lng: longitude } });
+        }
+
+        // SOS Function
+        function triggerSOS() {
+            if(confirm("Are you sure? This will alert the Admin!")) {
+                alert("🚨 SOS Sent to Admin!");
+                // Yahan backend ko SOS event bhej sakte hain
+                // socket.emit('sosAlert', { busId: 'BUS_001' });
+            }
+        }
+
+        function showError(error) { alert("GPS Error: " + error.message); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Fleet Tracking</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <div style="background: white; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h2 style="margin: 0; display: inline-block;">📍 Live Tracking Dashboard</h2>
+        <a href="index.html" style="float: right; margin-top: 5px; text-decoration: none; color: blue;">Home</a>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        const socket = io(); // Connect to Server
+
+        // 1. Initialize Map (Default: Mumbai)
+        const map = L.map('map').setView([19.0760, 72.8777], 13);
+
+        // 2. Add Map Tiles (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Bus Icon
+        const busIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', // Bus image
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+
+        // Store markers
+        let busMarkers = {};
+
+        // 3. Listen for Updates from Server
+        socket.on('updateMap', (data) => {
+            const { busId, location } = data; // location = { lat, lng }
+
+            // Agar marker pehle se hai, toh move karo
+            if (busMarkers[busId]) {
+                busMarkers[busId].setLatLng([location.lat, location.lng]);
+            } 
+            // Agar naya bus hai, toh marker create karo
+            else {
+                const marker = L.marker([location.lat, location.lng], { icon: busIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>${busId}</b><br>On Duty`);
+                busMarkers[busId] = marker;
+                
+                // Map ko bus par focus karo
+                map.setView([location.lat, location.lng], 15);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+frontend/style.css
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    text-align: center;
+}
+
+h1 { color: #1a202c; margin-top: 20px; }
+p { color: #4a5568; }
+
+/* Dashboard Cards */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 250px;
+    transition: transform 0.2s;
+}
+
+.card:hover { transform: translateY(-5px); }
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin-top: 20px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-blue { background-color: #3182ce; }
+.btn-green { background-color: #38a169; }
+.btn-red { background-color: #e53e3e; }
+
+/* Driver Page Specific */
+.status-box {
+    background: white;
+    margin: 20px auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Map Container */
+#map {
+    height: 90vh; /* Full screen height */
+    width: 100%;
+}
+
+/* frontend/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary: #2563eb;
+    --dark: #1e293b;
+    --light: #f8fafc;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background-color: var(--light);
+    color: var(--dark);
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5%;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.nav-links a { margin-left: 2rem; text-decoration: none; color: var(--dark); font-weight: 500; }
+.btn-nav { padding: 0.5rem 1.5rem; border: 2px solid var(--primary); border-radius: 5px; color: var(--primary) !important; transition: 0.3s; }
+.btn-nav:hover { background: var(--primary); color: white !important; }
+
+/* Hero Section */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4rem 5%;
+    background: white;
+}
+.hero-content { flex: 1; padding-right: 2rem; }
+.hero h1 { font-size: 3.5rem; line-height: 1.2; margin-bottom: 1rem; }
+.highlight { color: var(--primary); }
+.hero p { font-size: 1.1rem; color: #64748b; margin-bottom: 2rem; }
+.hero-image { flex: 1; text-align: center; }
+.hero-image img { width: 100%; max-width: 500px; }
+
+.btn { padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; }
+.btn-primary { background: var(--primary); color: white; margin-right: 1rem; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3); }
+.btn-secondary { background: #e2e8f0; color: var(--dark); }
+
+/* Features */
+.features { padding: 4rem 5%; text-align: center; background: #f1f5f9; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem; }
+.feature-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left; }
+.icon { font-size: 2rem; color: var(--primary); margin-bottom: 1rem; }
+
+/* Footer */
+footer { text-align: center; padding: 2rem; background: var(--dark); color: white; margin-top: auto; }
