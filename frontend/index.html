@@ -225,6 +225,40 @@
             color: #64748b;
         }
 
+        /* 📱 MOBILE FIXES */
+        @media screen and (max-width: 768px) {
+            nav {
+                position: relative;
+                top: 0; left: 0; transform: none;
+                width: 90%;
+                margin: 10px auto;
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            .nav-links a { margin: 0; font-size: 0.9rem; }
+            .hero {
+                flex-direction: column-reverse;
+                text-align: center;
+                padding: 30px 5%;
+                height: auto;
+                min-height: auto;
+            }
+            .hero-text { margin-top: 30px; }
+            h1 { font-size: 2.2rem; }
+            .cta-group { justify-content: center; flex-wrap: wrap; }
+            .hero-img { margin-top: 20px; }
+            .hero-img img { width: 100%; max-width: 320px; }
+            .stats-strip { flex-direction: column; gap: 30px; padding: 30px 20px; margin: 40px 5%; }
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+
     </style>
 </head>
 <body>
@@ -234,13 +268,14 @@
 
     <nav>
         <div class="logo">
-            <img src="imglogo.png" alt="GuardianRoute Logo" style="height: 40px; margin-right: 10px;"> 
-            GuardianRoute
+            <img src="imglogo.png" alt="GuardianRoute Logo" style="height: 40px; margin-right: 1px;"> 
+            <b style="font-size: 1.5rem; color: #237355;">GuardianRoute </b>
         </div>
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#about">How it works</a>
             <a href="driver.html">Driver App</a>
+            <a href="parent.html" style="font-weight: 600; color: var(--primary);">Parent Login</a>
             <a href="admin-panel.html" class="btn-nav">Admin Login <i class="fas fa-arrow-right"></i></a>
         </div>
     </nav>
@@ -255,12 +290,13 @@
             
             <div class="cta-group">
                 <a href="admin-panel.html" class="btn-primary">Go to Dashboard</a>
+                
                 <a href="#" class="btn-secondary" onclick="openVideoModal()">
                     <i class="fas fa-play-circle"></i> Watch Demo
                 </a>
             </div>
 
-            <div style="margin-top: 40px; display:flex; align-items:center; gap:15px; color:#64748b; font-weight:500;">
+            <div style="margin-top: 40px; display:flex; align-items:center; gap:15px; color:#64748b; font-weight:500; justify-content: center;">
                 <div style="display:flex;">
                     <img src="https://randomuser.me/api/portraits/men/32.jpg" style="width:30px; border-radius:50%; border:2px solid white;">
                     <img src="https://randomuser.me/api/portraits/women/44.jpg" style="width:30px; border-radius:50%; border:2px solid white; margin-left:-10px;">

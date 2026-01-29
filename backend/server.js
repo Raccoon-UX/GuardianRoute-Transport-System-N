@@ -7,8 +7,9 @@ const cors = require('cors');
 const path = require('path');
 
 // Models Import
+// (Make sure you have these files in backend/models folder)
 const Bus = require('./models/Bus');
-const Student = require('./models/Student'); // <-- Yeh line zaroori hai
+const Student = require('./models/Student'); 
 
 const app = express();
 const server = http.createServer(app);
@@ -16,7 +17,7 @@ const server = http.createServer(app);
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend'))); // Frontend Serve karne ke liye
+app.use(express.static(path.join(__dirname, '../frontend'))); // Serve Frontend Static files
 
 // Database Connection
 const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/smart-commute";
@@ -43,7 +44,7 @@ app.post('/api/students', async (req, res) => {
     await student.save();
     res.status(201).json({ message: "Student Added!", student });
   } catch (err) {
-    console.error("Save Error:", err); // Error terminal mein dikhega
+    console.error("Save Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -62,10 +63,10 @@ app.post('/api/attendance', async (req, res) => {
 // 4. Get Optimized Route (Skip-Stop Logic)
 app.get('/api/route/:busId', async (req, res) => {
   try {
-    // Sirf 'Present' students ko dhundo
+    // Only fetch 'Present' students
     const activeStudents = await Student.find({ busId: req.params.busId, isPresent: true });
     
-    // Sort by Roll No (Simple sequencing)
+    // Sort by Roll No (Simple sequencing logic for now)
     activeStudents.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
 
     const routePoints = activeStudents.map(s => ({
@@ -79,9 +80,6 @@ app.get('/api/route/:busId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-
-// --- backend/server.js (Add this below Student APIs) ---
 
 // 5. Get All Buses
 app.get('/api/buses', async (req, res) => {
@@ -116,21 +114,37 @@ app.post('/api/buses/status', async (req, res) => {
 });
 
 
-// --- SOCKET IO ---
-const io = new Server(server, { cors: { origin: "*" } });
+// --- SOCKET IO (Real-time Logic) ---
+const io = new Server(server, { 
+    cors: { origin: "*" } 
+});
 
 io.on('connection', (socket) => {
-  console.log('⚡ Client Connected:', socket.id);
+  console.log('🔌 New Client Connected:', socket.id);
 
+  // Identify who connected (Optional but good for debugging)
+  socket.on('parentJoined', (data) => {
+      console.log(`👨‍👩‍👧 Parent Connected: ${data?.mobile || 'Anonymous'}`);
+  });
+
+  // Driver sends location
   socket.on('driverLocation', (data) => {
+    // Broadcast location to EVERYONE (Admin + Parents)
     io.emit('updateMap', data);
   });
 
-  socket.on('disconnect', () => console.log('Client Disconnected'));
+  // SOS Alert
+  socket.on('sosAlert', (data) => {
+      console.log(`🚨 SOS Alert from ${data.busId}`);
+      io.emit('newAlert', { type: 'critical', message: `SOS from Bus ${data.busId}` });
+  });
+
+  socket.on('disconnect', () => console.log('❌ Client Disconnected'));
 });
 
 // Start Server
-const PORT = process.env.PORT || 5000;
+// (Changed to 3000 to match frontend defaults)
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
