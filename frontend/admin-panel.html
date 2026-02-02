@@ -10,7 +10,8 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -28,39 +29,27 @@
             margin: 0; 
             display: flex; 
             height: 100vh; 
-            /* ✨ MODERN GRADIENT BACKGROUND ✨ */
             background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f0fdfa 100%);
             color: var(--dark);
             overflow: hidden;
         }
         
-        /* --- SIDEBAR (Modern Dark) --- */
+        /* --- SIDEBAR --- */
         .sidebar { 
             width: 260px; 
-            background: var(--sidebar-bg); 
+            background: rgb(22, 49, 57); 
             color: white; 
             display: flex; 
             flex-direction: column; 
             box-shadow: 10px 0 30px rgba(0,0,0,0.05);
             z-index: 10;
         }
-        .sidebar-header { 
-            padding: 30px; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px;
-            font-size: 1.3rem; 
-            font-weight: 700; 
-            color: #fff;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .brand-icon {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            width: 35px; height: 35px;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem;
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .menu { padding: 20px 10px; flex: 1; }
@@ -98,7 +87,7 @@
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- GLASS CARDS (The Magic) --- */
+        /* --- GLASS CARDS --- */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -141,7 +130,6 @@
             background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
             color: #64748b;
         }
-        /* Custom Colors */
         .stat-card.primary .icon-circle { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: var(--primary); }
         .stat-card.success .icon-circle { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #10b981; }
         .stat-card.warning .icon-circle { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #f97316; }
@@ -200,11 +188,9 @@
     <div class="sidebar">
         
         <div class="logo">
-            <img src="imglogoNoText.png" alt="GuardianRoute Logo" style="height: 40px; margin-right: 10px; margin-top: 10px;"> 
-            <!-- GuardianRoute -->
+            <img src="imglogoNoText.png" alt="GuardianRoute Logo" style="height: 40px; width: 50px ; margin-right: 0px;"> 
             <b style="font-size: 1.5rem; color: #e4eae7;">GuardianRoute</b>
         </div>
-
 
         <div class="menu">
             <a href="#" class="active" onclick="showSection('dashboard')"><i class="fas fa-grid-2"></i> Dashboard</a>
@@ -222,31 +208,19 @@
             
             <div class="card-grid">
                 <div class="stat-card primary">
-                    <div class="stat-info">
-                        <h3>Active Buses</h3>
-                        <div class="value">1</div>
-                    </div>
+                    <div class="stat-info"><h3>Active Buses</h3><div class="value">1</div></div>
                     <div class="icon-circle"><i class="fas fa-bus"></i></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-info">
-                        <h3>Total Students</h3>
-                        <div class="value" id="totalStudents">0</div>
-                    </div>
+                    <div class="stat-info"><h3>Total Students</h3><div class="value" id="totalStudents">0</div></div>
                     <div class="icon-circle"><i class="fas fa-user-graduate"></i></div>
                 </div>
                 <div class="stat-card warning">
-                    <div class="stat-info">
-                        <h3>Avg. Delay</h3>
-                        <div class="value">2m</div>
-                    </div>
+                    <div class="stat-info"><h3>Avg. Delay</h3><div class="value">2m</div></div>
                     <div class="icon-circle"><i class="fas fa-stopwatch"></i></div>
                 </div>
                 <div class="stat-card success">
-                    <div class="stat-info">
-                        <h3>Fuel Efficiency</h3>
-                        <div class="value">+12%</div>
-                    </div>
+                    <div class="stat-info"><h3>Fuel Efficiency</h3><div class="value">+12%</div></div>
                     <div class="icon-circle"><i class="fas fa-leaf"></i></div>
                 </div>
             </div>
@@ -264,13 +238,13 @@
                         <span>Fuel Consumption</span>
                         <i class="fas fa-gas-pump" style="color:#ccc;"></i>
                     </div>
-                    <div style="height: 200px; display: flex; justify-content: center;">
+                    <div style="height: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;">
                         <canvas id="fuelChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="glass-panel">
+            <div class="glass-panel" id="alertsContainer">
                 <div class="chart-header"><span>Recent Alerts</span></div>
                 <div class="alert-item">
                     <div class="alert-dot" style="background: #f59e0b;"></div>
@@ -286,13 +260,6 @@
                         <div style="font-size: 0.8rem; color: #94a3b8; margin-top:2px;">15 mins ago</div>
                     </div>
                 </div>
-                <div class="alert-item">
-                    <div class="alert-dot" style="background: #3b82f6;"></div>
-                    <div style="flex:1;">
-                        <strong>Route Optimized</strong> - Stop #3 skipped due to absence.
-                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top:2px;">1 hour ago</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -305,61 +272,30 @@
 
         <div id="students" class="section">
             <h1 class="header-title">Student Management</h1>
-            
             <div class="glass-panel" style="margin-bottom: 30px;">
                 <div class="chart-header"><span>Register New Student</span></div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="sName" placeholder="John Doe">
-                    </div>
-                    <div class="form-group">
-                        <label>Roll No</label>
-                        <input type="text" id="sRoll" placeholder="101">
-                    </div>
-                    <div class="form-group">
-                        <label>Bus Route ID</label>
-                        <input type="text" id="sBus" placeholder="BUS_001">
-                    </div>
+                    <div class="form-group"><label>Full Name</label><input type="text" id="sName" placeholder="John Doe"></div>
+                    <div class="form-group"><label>Roll No</label><input type="text" id="sRoll" placeholder="101"></div>
+                    <div class="form-group"><label>Bus Route ID</label><input type="text" id="sBus" placeholder="BUS_001"></div>
                     <button class="btn" onclick="addStudent()">Add Student</button>
                 </div>
             </div>
-
             <div class="glass-panel table-container">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Roll No</th>
-                            <th>Bus ID</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTableBody">
-                        </tbody>
+                    <thead><tr><th>Student Name</th><th>Roll No</th><th>Bus ID</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="studentTableBody"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="buses" class="section">
             <h1 class="header-title">Fleet Management</h1>
-
             <div class="card-grid">
-                <div class="stat-card primary">
-                    <div class="stat-info"><h3>Total Fleet</h3><div class="value" id="totalFleet">0</div></div>
-                    <div class="icon-circle"><i class="fas fa-layer-group"></i></div>
-                </div>
-                <div class="stat-card success">
-                    <div class="stat-info"><h3>On Route</h3><div class="value" id="activeFleet">0</div></div>
-                    <div class="icon-circle"><i class="fas fa-route"></i></div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-info"><h3>In Maintenance</h3><div class="value" id="maintenanceFleet">0</div></div>
-                    <div class="icon-circle"><i class="fas fa-tools"></i></div>
-                </div>
+                <div class="stat-card primary"><div class="stat-info"><h3>Total Fleet</h3><div class="value" id="totalFleet">0</div></div><div class="icon-circle"><i class="fas fa-layer-group"></i></div></div>
+                <div class="stat-card success"><div class="stat-info"><h3>On Route</h3><div class="value" id="activeFleet">0</div></div><div class="icon-circle"><i class="fas fa-route"></i></div></div>
+                <div class="stat-card warning"><div class="stat-info"><h3>In Maintenance</h3><div class="value" id="maintenanceFleet">0</div></div><div class="icon-circle"><i class="fas fa-tools"></i></div></div>
             </div>
-
             <div class="glass-panel" style="margin-bottom: 30px;">
                 <div class="chart-header"><span>Register New Vehicle</span></div>
                 <div class="form-row">
@@ -369,20 +305,10 @@
                     <button class="btn" onclick="addBus()">Register Bus</button>
                 </div>
             </div>
-
             <div class="glass-panel table-container">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Bus Number</th>
-                            <th>Driver</th>
-                            <th>Status</th>
-                            <th>Fuel Rating</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="busTableBody">
-                        </tbody>
+                    <thead><tr><th>Bus Number</th><th>Driver</th><th>Status</th><th>Fuel Rating</th><th>Action</th></tr></thead>
+                    <tbody id="busTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -390,6 +316,9 @@
     </div>
 
     <script>
+        // --- SOCKET CONNECTION ---
+        const socket = io('http://localhost:5000'); 
+
         // --- 1. NAVIGATION ---
         function showSection(id) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -412,7 +341,6 @@
             iconSize: [48, 48], iconAnchor: [24, 24]
         });
 
-        const socket = io();
         const markers = {};
         let routePolyline = null;
 
@@ -441,7 +369,36 @@
                 });
         }
 
-        // --- 3. STUDENT DATA LOGIC ---
+        // --- 3. LIVE ALERTS LOGIC (NEW) ---
+        const alertContainer = document.getElementById('alertsContainer');
+
+        socket.on('newAlert', (data) => {
+            addAlert(data.type, data.message);
+        });
+
+        function addAlert(type, message) {
+            let color = '#3b82f6'; // Default Blue
+            let label = 'INFO';
+
+            if(type === 'danger' || type === 'critical') { color = '#ef4444'; label = 'ALERT'; }
+            if(type === 'warning') { color = '#f59e0b'; label = 'WARNING'; }
+            if(type === 'success') { color = '#10b981'; label = 'SUCCESS'; }
+
+            const alertHTML = `
+                <div class="alert-item" style="animation: fadeIn 0.5s;">
+                    <div class="alert-dot" style="background: ${color}; box-shadow: 0 0 10px ${color};"></div>
+                    <div style="flex:1;">
+                        <strong>${label}</strong> - ${message}
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top:2px;">Just now</div>
+                    </div>
+                </div>
+            `;
+            
+            const header = alertContainer.querySelector('.chart-header');
+            header.insertAdjacentHTML('afterend', alertHTML);
+        }
+
+        // --- 4. STUDENT & BUS MANAGEMENT ---
         function loadStudents() {
             fetch('/api/students').then(res => res.json()).then(data => {
                 document.getElementById('totalStudents').innerText = data.length;
@@ -452,20 +409,7 @@
                     const statusText = student.isPresent ? 'Present' : 'Absent';
                     const btnText = student.isPresent ? 'Mark Absent' : 'Mark Present';
                     const btnStyle = student.isPresent ? 'background:#fee2e2; color:#ef4444;' : 'background:#dcfce7; color:#166534;';
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="font-weight:600;">${student.name}</td>
-                            <td>${student.rollNo}</td>
-                            <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:5px; font-size:0.9rem;">${student.busId}</span></td>
-                            <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-                            <td>
-                                <button onclick="toggleAttendance('${student._id}', ${!student.isPresent})" 
-                                    style="border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; ${btnStyle}">
-                                    ${btnText}
-                                </button>
-                            </td>
-                        </tr>`;
+                    tbody.innerHTML += `<tr><td style="font-weight:600;">${student.name}</td><td>${student.rollNo}</td><td><span style="background:#f1f5f9; padding:4px 8px; border-radius:5px; font-size:0.9rem;">${student.busId}</span></td><td><span class="status-pill ${statusClass}">${statusText}</span></td><td><button onclick="toggleAttendance('${student._id}', ${!student.isPresent})" style="border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; ${btnStyle}">${btnText}</button></td></tr>`;
                 });
                 updateRouteOnMap('BUS_001');
             });
@@ -473,11 +417,7 @@
         loadStudents();
 
         function toggleAttendance(id, newStatus) {
-            fetch('/api/attendance', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studentId: id, status: newStatus })
-            }).then(() => loadStudents());
+            fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: id, status: newStatus }) }).then(() => loadStudents());
         }
 
         function addStudent() {
@@ -488,111 +428,110 @@
             const baseLng = 72.8777;
             const randomLat = baseLat + (Math.random() * 0.04) - 0.02;
             const randomLng = baseLng + (Math.random() * 0.04) - 0.02;
-
-            fetch('/api/students', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, rollNo, busId, pickupLocation: { lat: randomLat, lng: randomLng } })
-            }).then(() => { loadStudents(); alert('Student Added!'); });
+            fetch('/api/students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, rollNo, busId, pickupLocation: { lat: randomLat, lng: randomLng } }) }).then(() => { loadStudents(); alert('Student Added!'); });
         }
 
-        // --- 4. FLEET MANAGER LOGIC (Updated) ---
         function loadBuses() {
-            fetch('/api/buses')
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('totalFleet').innerText = data.length;
-                    document.getElementById('activeFleet').innerText = data.filter(b => b.status === 'active').length;
-                    document.getElementById('maintenanceFleet').innerText = data.filter(b => b.status === 'maintenance').length;
-
-                    const tbody = document.getElementById('busTableBody');
-                    tbody.innerHTML = '';
-
-                    data.forEach(bus => {
-                        let statusBadge = '';
-                        if(bus.status === 'active') statusBadge = '<span class="status-pill present">On Route</span>';
-                        else if(bus.status === 'maintenance') statusBadge = '<span class="status-pill maintenance">Maintenance</span>';
-                        else statusBadge = '<span class="status-pill idle">Idle</span>';
-
-                        const nextStatus = bus.status === 'maintenance' ? 'idle' : 'maintenance';
-                        const btnText = bus.status === 'maintenance' ? 'Finish Repair' : 'Send to Repair';
-                        const btnColor = bus.status === 'maintenance' ? '#10b981' : '#f59e0b';
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td style="font-weight:600;">${bus.busId}</td>
-                                <td>${bus.driverName || 'Unassigned'}</td>
-                                <td>${statusBadge}</td>
-                                <td><i class="fas fa-star" style="color:#f59e0b;"></i> (4.5)</td>
-                                <td>
-                                    <button onclick="updateBusStatus('${bus.busId}', '${nextStatus}')" 
-                                        style="border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; background:${btnColor}; color:white;">
-                                        <i class="fas fa-wrench"></i> ${btnText}
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+            fetch('/api/buses').then(res => res.json()).then(data => {
+                document.getElementById('totalFleet').innerText = data.length;
+                document.getElementById('activeFleet').innerText = data.filter(b => b.status === 'active').length;
+                document.getElementById('maintenanceFleet').innerText = data.filter(b => b.status === 'maintenance').length;
+                const tbody = document.getElementById('busTableBody');
+                tbody.innerHTML = '';
+                data.forEach(bus => {
+                    let statusBadge = '';
+                    if(bus.status === 'active') statusBadge = '<span class="status-pill present">On Route</span>';
+                    else if(bus.status === 'maintenance') statusBadge = '<span class="status-pill maintenance">Maintenance</span>';
+                    else statusBadge = '<span class="status-pill idle">Idle</span>';
+                    const nextStatus = bus.status === 'maintenance' ? 'idle' : 'maintenance';
+                    const btnText = bus.status === 'maintenance' ? 'Finish Repair' : 'Send to Repair';
+                    const btnColor = bus.status === 'maintenance' ? '#10b981' : '#f59e0b';
+                    tbody.innerHTML += `<tr><td style="font-weight:600;">${bus.busId}</td><td>${bus.driverName || 'Unassigned'}</td><td>${statusBadge}</td><td><i class="fas fa-star" style="color:#f59e0b;"></i> (4.5)</td><td><button onclick="updateBusStatus('${bus.busId}', '${nextStatus}')" style="border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; background:${btnColor}; color:white;"><i class="fas fa-wrench"></i> ${btnText}</button></td></tr>`;
                 });
+            });
         }
         
         function addBus() {
             const busId = document.getElementById('bNumber').value;
             const driverName = document.getElementById('bDriver').value;
             if(!busId) return alert("Bus Number is required!");
-
-            fetch('/api/buses', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ busId, driverName, status: 'idle', location: { lat: 19.0760, lng: 72.8777 } })
-            }).then(() => { alert('Bus Registered!'); loadBuses(); });
+            fetch('/api/buses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ busId, driverName, status: 'idle', location: { lat: 19.0760, lng: 72.8777 } }) }).then(() => { alert('Bus Registered!'); loadBuses(); });
         }
 
         function updateBusStatus(busId, status) {
-            fetch('/api/buses/status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ busId, status })
-            }).then(() => loadBuses());
+            fetch('/api/buses/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ busId, status }) }).then(() => loadBuses());
         }
-
-        // Initialize Fleet Manager
         loadBuses();
 
-        // --- 5. CHARTS ---
+        // Charts
         const ctx1 = document.getElementById('attendanceChart').getContext('2d');
         const gradient = ctx1.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
         gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
-
         new Chart(ctx1, {
             type: 'line',
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                datasets: [{
-                    label: 'Attendance',
-                    data: [45, 48, 40, 49, 42, 30],
-                    borderColor: '#6366f1',
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.4
-                }]
+                datasets: [{ label: 'Attendance', data: [45, 48, 40, 49, 42, 30], borderColor: '#6366f1', backgroundColor: gradient, fill: true, tension: 0.4 }]
             },
             options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
 
+        // ✅ UPDATED FUEL CHART (Text in Center + Bottom Labels)
         const ctx2 = document.getElementById('fuelChart').getContext('2d');
+        
+        // Plugin to Draw Text in Center of Doughnut
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                var width = chart.width,
+                    height = chart.height,
+                    ctx = chart.ctx;
+
+                ctx.restore();
+                var fontSize = (height / 140).toFixed(2);
+                ctx.font = "bold " + fontSize + "em sans-serif"; // Bold Font
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#1e293b"; // Dark Blue Color
+
+                var text = "75% Used",
+                    textX = Math.round((width - ctx.measureText(text).width) / 2),
+                    textY = height / 2.3; // Thoda upar adjust kiya taaki labels se takraaye nahi
+
+                ctx.fillText(text, textX, textY);
+                ctx.save();
+            }
+        };
+
         new Chart(ctx2, {
             type: 'doughnut',
             data: {
-                labels: ['Used', 'Saved'],
+                labels: ['Fuel Used', 'Fuel Saved'], 
                 datasets: [{
                     data: [75, 25],
                     backgroundColor: ['#f43f5e', '#10b981'],
-                    borderWidth: 0
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
-            options: { cutout: '70%' }
+            options: {
+                cutout: '75%', // Thoda patla ring banaya taaki text clean dikhe
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12, family: "'Outfit', sans-serif" },
+                            color: '#64748b'
+                        }
+                    }
+                }
+            },
+            plugins: [centerTextPlugin] // Register the custom plugin
         });
     </script>
 </body>
