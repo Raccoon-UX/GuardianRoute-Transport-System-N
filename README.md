@@ -6,7 +6,7 @@ Real-time school bus tracking system built with Node.js, Socket.io, and Leaflet 
 =======
 >>>>>>> cd72c95 (Updated README.md)
 
-# 🚍 GuardianRoute  (https://guardian-route-transport-system-n.vercel.app/)
+# 🚍 GuardianRoute  [Live](https://guardian-route-transport-system-n.vercel.app/)
 
 **GuardianRoute: Smart School Transport & Safety System**
 
