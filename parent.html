@@ -54,7 +54,7 @@
         <div class="login-card">
             
             <div class="logo" style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                <img src="imglogo.png" alt="GuardianRoute Logo" style="height: 50px; margin-right: 1px;"> 
+                <img src="images/imglogo.png" alt="GuardianRoute Logo" style="height: 50px; margin-right: 1px;"> 
                 <b style="font-size: 1.5rem; color: #237355;">GuardianRoute</b>
             </div>
 
@@ -93,7 +93,7 @@
     <div id="dashboardScreen">
         <header>
             <div class="logo">
-                <img src="imglogo.png" alt="Logo" style="height: 35px; margin-right: 8px; vertical-align: middle;">
+                <img src="images/imglogo.png" alt="Logo" style="height: 35px; margin-right: 8px; vertical-align: middle;">
                 <b style="color: var(--primary); font-size: 1.2rem;">GuardianRoute</b>
             </div>
             <div style="color: #ef4444; font-size: 1.2rem; cursor: pointer;" onclick="logout()"><i class="fas fa-sign-out-alt"></i></div>
@@ -124,7 +124,7 @@
     </div>
 
     <script>
-        const socket = io('http://localhost:5000'); 
+        const socket = io('https://guardianroute-transport-system-n.onrender.com'); 
         let map, busMarker;
 
         // --- 📊 DYNAMIC DATA LOADING (External File) ---
